@@ -189,6 +189,5 @@ npm run typecheck
 MIT License
 
 ## 联系方式
-
-- Gitee: https://gitee.com/hhx-git
-- 邮箱: hhx@gitee.com
+- 邮箱: qaz5744422969@qq.com
+- wx: 19510334042
