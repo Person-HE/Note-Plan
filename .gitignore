@@ -1,0 +1,64 @@
+# Dependencies
+node_modules/
+/package-lock.json
+
+# Build outputs
+dist/
+electron/app/
+android/app/build/
+android/build/
+ios/App/App/public/
+ios/App/App.xcodeproj/project.xcworkspace/
+ios/App/App.xcworkspace/
+
+# Electron release packages (upload to Gitee Releases)
+release/
+
+# Media files (upload to Gitee Releases)
+videos/
+screenshots/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Capacitor
+android/.gradle/
+android/*/build/
+ios/App/build/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Temporary files
+*.tmp
+*.temp
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Error reports
+crashes/
+problem-matchers/
+
+# Unit test output
+coverage/
+.nyc_output/
+
+# Misc
+*.bak
+*.cache
