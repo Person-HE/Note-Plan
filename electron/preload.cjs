@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   dismissNotification: (data) => ipcRenderer.invoke('notification:dismiss', data),
   minimizeToTray: () => ipcRenderer.invoke('window:minimize-to-tray'),
   showWindow: () => ipcRenderer.invoke('window:show'),
+  setCloseToTray: (enabled) => ipcRenderer.invoke('window:set-close-behavior', enabled),
   selectDataPath: () => ipcRenderer.invoke('dialog:selectDataPath'),
   getDataPath: () => ipcRenderer.invoke('path:getDataPath'),
   migrateData: (newPath) => ipcRenderer.invoke('data:migrate', newPath),
@@ -35,4 +36,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.removeAllListeners('notification:closed')
   },
   fetchContent: (url) => ipcRenderer.invoke('content:fetch', url),
+  callAI: (config, payload) => ipcRenderer.invoke('ai:call', config, payload),
+  testAI: (config) => ipcRenderer.invoke('ai:test', config),
 })

@@ -13,6 +13,8 @@ ios/App/App.xcworkspace/
 
 # Electron release packages (upload to Gitee Releases)
 release/
+release-v*/
+release-*/
 
 # Media files (upload to Gitee Releases)
 videos/
@@ -62,3 +64,16 @@ coverage/
 # Misc
 *.bak
 *.cache
+
+# Local Electron / app runtime data
+Data/
+.workbuddy/
+.trae/
+.xcode/
+local_secrets.py
+
+# Marketing / one-off dumps
+xiaohongshu/
+*.html
+!index.html
+

@@ -127,6 +127,16 @@ export function TaskItem({
             >
               {priorityConfig.label}
             </span>
+            {task.startDate && (
+              <span
+                className="flex items-center gap-1 text-xs font-hand"
+                style={{ color: 'var(--ink-light)' }}
+              >
+                <Calendar size={11} />
+                开始 {formatRelativeDate(task.startDate)}
+                {task.startTime && ` ${task.startTime}`}
+              </span>
+            )}
             {task.dueDate && (
               <span
                 className="flex items-center gap-1 text-xs font-hand"
@@ -390,6 +400,8 @@ export function TaskDetailPanel() {
     description: '',
     priority: 'medium' as Priority,
     groupId: '' as string,
+    startDate: '',
+    startTime: '',
     dueDate: '',
     dueTime: '',
     estimatedMinutes: 0,
@@ -405,6 +417,8 @@ export function TaskDetailPanel() {
         description: task.description,
         priority: task.priority,
         groupId: task.groupId ?? '',
+        startDate: task.startDate ?? '',
+        startTime: task.startTime ?? '',
         dueDate: task.dueDate ?? '',
         dueTime: task.dueTime ?? '',
         estimatedMinutes: task.estimatedMinutes,
@@ -414,7 +428,7 @@ export function TaskDetailPanel() {
     } else if (isNew) {
       setForm({
         title: '', description: '', priority: 'medium', groupId: '',
-        dueDate: '', dueTime: '', estimatedMinutes: 0,
+        startDate: '', startTime: '', dueDate: '', dueTime: '', estimatedMinutes: 0,
         isImportant: false, isRecurring: false,
       })
     }
@@ -430,6 +444,8 @@ export function TaskDetailPanel() {
         description: form.description,
         priority: form.priority,
         groupId: form.groupId || null,
+        startDate: form.startDate || null,
+        startTime: form.startTime || null,
         dueDate: form.dueDate || null,
         dueTime: form.dueTime || null,
         estimatedMinutes: form.estimatedMinutes,
@@ -442,6 +458,8 @@ export function TaskDetailPanel() {
         description: form.description,
         priority: form.priority,
         groupId: form.groupId || null,
+        startDate: form.startDate || null,
+        startTime: form.startTime || null,
         dueDate: form.dueDate || null,
         dueTime: form.dueTime || null,
         estimatedMinutes: form.estimatedMinutes,
@@ -516,6 +534,21 @@ export function TaskDetailPanel() {
               { label: '无分组', value: '' },
               ...groups.map(g => ({ label: g.name, value: g.id, color: g.color })),
             ]}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Input
+            label="开始日期"
+            type="date"
+            value={form.startDate}
+            onChange={(e) => setForm(f => ({ ...f, startDate: e.target.value }))}
+          />
+          <Input
+            label="开始时间"
+            type="time"
+            value={form.startTime}
+            onChange={(e) => setForm(f => ({ ...f, startTime: e.target.value }))}
           />
         </div>
 

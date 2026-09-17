@@ -9,6 +9,8 @@ export interface TaskRecord {
   progress: number
   parentId: string | null
   groupId: string | null
+  startDate: string | null
+  startTime: string | null
   dueDate: string | null
   dueTime: string | null
   reminderIds: string[]

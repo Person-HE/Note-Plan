@@ -10,9 +10,8 @@ import { useNoteStore } from '@/modules/note'
 import { DesktopPet } from '@/modules/pet'
 import { useTheme, useKeyboard } from '@/shared/hooks'
 import { usePlatform } from '@/shared'
-import { cn, isTouchDevice, isElectron, onNotificationClicked, onDataChanged, removeDataChangedListener, removeNotificationClickedListener } from '@/shared'
+import { cn, isTouchDevice, isElectron, onNotificationClicked, onDataChanged, removeDataChangedListener, removeNotificationClickedListener, setCloseToTray } from '@/shared'
 import { useSettingsStore } from '@/modules/settings/store'
-import { seedTestData } from './seed'
 import { FloatingApp } from '@/modules/view'
 import { Icon } from '@/shared/Icons'
 
@@ -338,7 +337,18 @@ export default function App() {
 
   useEffect(() => {
     const init = async () => {
-      await seedTestData()
+      // 一次性清理旧版本注入的模拟数据
+      try {
+        const { db, clearAllData } = await import('@/core/database')
+        const seedVersion = await db.settings.get('seedVersion')
+        if (seedVersion) {
+          await clearAllData()
+          console.log('[Init] 已清理旧版本模拟数据')
+        }
+      } catch (err) {
+        console.error('[Init] 清理数据失败:', err)
+      }
+
       await taskStore.loadAll()
       await notificationStore.loadAll()
       await inspirationStickyStore.loadAll()
@@ -382,6 +392,13 @@ export default function App() {
       useSettingsStore.getState().load()
     }
   }, [settingsLoaded])
+
+  // 将“关闭到托盘”设置同步到主进程，决定点击关闭按钮时是退出还是最小化到托盘
+  useEffect(() => {
+    if (settingsLoaded && isElectron()) {
+      setCloseToTray(settings.closeToTray)
+    }
+  }, [settingsLoaded, settings.closeToTray])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-font-size', settings.fontSizeCustom ? 'custom' : settings.fontSize)

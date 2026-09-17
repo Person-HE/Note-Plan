@@ -77,6 +77,11 @@ export async function migrateData(newPath: string): Promise<boolean> {
   return window.electronAPI.migrateData(newPath)
 }
 
+export async function setCloseToTray(enabled: boolean): Promise<void> {
+  if (!isElectron() || !window.electronAPI) return
+  await window.electronAPI.setCloseToTray(enabled)
+}
+
 export function onNotificationClicked(callback: (data: { taskId: string; type: string }) => void): void {
   if (!isElectron() || !window.electronAPI) return
   window.electronAPI.onNotificationClicked(callback)

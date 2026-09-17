@@ -5,6 +5,7 @@ export interface ElectronAPI {
   dismissNotification: (data: { taskId: string; type: string }) => Promise<{ success: boolean }>
   minimizeToTray: () => Promise<{ success: boolean }>
   showWindow: () => Promise<{ success: boolean }>
+  setCloseToTray: (enabled: boolean) => Promise<{ success: boolean }>
   selectDataPath: () => Promise<string | null>
   getDataPath: () => Promise<string>
   migrateData: (newPath: string) => Promise<boolean>
@@ -21,6 +22,8 @@ export interface ElectronAPI {
   removeNotificationClickedListener: () => void
   removeNotificationClosedListener: () => void
   fetchContent: (url: string) => Promise<{ success: boolean; data?: { source: string; title: string; content: string; author: string; coverImage?: string; sourceUrl: string }; error?: string }>
+  callAI: (config: { apiBaseUrl: string; apiKey: string; model: string }, payload: { messages: Array<{ role: string; content: string }>; max_tokens?: number; stream?: boolean; tools?: unknown }) => Promise<{ success: boolean; data?: { content: string; raw?: unknown }; error?: string }>
+  testAI: (config: { apiBaseUrl: string; apiKey: string; model: string }) => Promise<{ success: boolean; message: string }>
 }
 
 declare global {

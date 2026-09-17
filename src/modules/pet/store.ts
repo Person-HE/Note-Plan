@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { eventBus } from '@/core'
-import { generateId, toISODateTimeString } from '@/shared'
+import { generateId, toISODateTimeString, isElectron } from '@/shared'
+import { getAIConfig } from '@/modules/ai/services'
 import type { PetMood, PetAction, ChatMessage, AITool, ToolCallResult } from './types'
 import { getAllTools } from './tools'
 
@@ -42,15 +43,12 @@ interface PetStoreState {
   isChatOpen: boolean
   messages: ChatMessage[]
   isThinking: boolean
-  llmEndpoint: string
-  llmModel: string
 
   setMood: (mood: PetMood) => void
   setAction: (action: PetAction) => void
   toggleChat: () => void
   sendMessage: (content: string) => Promise<void>
   updatePosition: (pos: { x: number; y: number }) => void
-  setLLMConfig: (endpoint: string, model: string) => void
   reactToEvent: (event: string) => void
 }
 
@@ -87,8 +85,6 @@ export const usePetStore = create<PetStoreState>((set, get) => ({
   isChatOpen: false,
   messages: [],
   isThinking: false,
-  llmEndpoint: 'http://localhost:11434',
-  llmModel: 'qwen2.5:7b',
 
   setMood: (mood) => {
     set({ mood, action: MOOD_ACTION_MAP[mood] })
@@ -103,8 +99,9 @@ export const usePetStore = create<PetStoreState>((set, get) => ({
   },
 
   sendMessage: async (content) => {
-    const { llmEndpoint, llmModel, messages } = get()
+    const { messages } = get()
     const tools = getAllTools()
+    const aiConfig = getAIConfig()
 
     const userMessage: ChatMessage = {
       id: generateId(),
@@ -119,6 +116,28 @@ export const usePetStore = create<PetStoreState>((set, get) => ({
       mood: 'thinking',
     }))
 
+    // 校验统一 AI 配置
+    if (!aiConfig.enabled || aiConfig.provider === 'none' || !aiConfig.apiBaseUrl || !aiConfig.model) {
+      const assistantMessage: ChatMessage = {
+        id: generateId(),
+        role: 'assistant',
+        content: '小笔尚未连接 AI 服务，请先到「设置 → AI 助手」中配置并启用 AI。',
+        timestamp: toISODateTimeString(new Date()),
+      }
+      set(state => ({
+        messages: [...state.messages, assistantMessage],
+        isThinking: false,
+        mood: 'sad',
+      }))
+      return
+    }
+
+    const configForIPC = {
+      apiBaseUrl: aiConfig.apiBaseUrl,
+      apiKey: aiConfig.apiKey,
+      model: aiConfig.model,
+    }
+
     try {
       const apiMessages = [
         { role: 'system' as const, content: SYSTEM_PROMPT },
@@ -128,26 +147,49 @@ export const usePetStore = create<PetStoreState>((set, get) => ({
 
       const toolsSchema = buildToolsSchema(tools)
 
-      const response = await fetch(`${llmEndpoint}/v1/chat/completions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: llmModel,
-          messages: apiMessages,
-          tools: toolsSchema,
-          stream: false,
-        }),
-      })
+      // 通过主进程代理调用 AI（规避 CORS），从 raw 中拿到完整 message（含 tool_calls）
+      const callLLM = async (msgs: any[], withTools: boolean) => {
+        if (isElectron() && window.electronAPI?.callAI) {
+          const result = await window.electronAPI.callAI(configForIPC, {
+            messages: msgs,
+            ...(withTools ? { tools: toolsSchema } : {}),
+          })
+          if (!result.success) {
+            throw new Error(result.error || 'AI 请求失败')
+          }
+          const choice = (result.data!.raw as any)?.choices?.[0]
+          if (!choice || !choice.message) {
+            throw new Error('AI 返回数据格式异常')
+          }
+          return choice.message
+        }
 
-      if (!response.ok) {
-        throw new Error(`LLM请求失败：${response.status} ${response.statusText}`)
+        // Web 端回退（受 CORS 限制）
+        const baseUrl = aiConfig.apiBaseUrl.replace(/\/+$/, '')
+        const chatUrl = /\/v1$/i.test(baseUrl) ? `${baseUrl}/chat/completions` : `${baseUrl}/v1/chat/completions`
+        const response = await fetch(chatUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(aiConfig.apiKey ? { 'Authorization': `Bearer ${aiConfig.apiKey}` } : {}),
+          },
+          body: JSON.stringify({
+            model: aiConfig.model,
+            messages: msgs,
+            ...(withTools ? { tools: toolsSchema } : {}),
+            stream: false,
+          }),
+        })
+        if (!response.ok) {
+          throw new Error(`AI 请求失败：${response.status} ${response.statusText}`)
+        }
+        const data = await response.json()
+        const choice = data.choices?.[0]
+        if (!choice) throw new Error('AI 返回数据格式异常')
+        return choice.message
       }
 
-      const data = await response.json()
-      const choice = data.choices?.[0]
-      if (!choice) throw new Error('LLM返回数据格式异常')
-
-      const assistantMsg = choice.message
+      const assistantMsg = await callLLM(apiMessages, true)
 
       if (assistantMsg.tool_calls && assistantMsg.tool_calls.length > 0) {
         const toolResults: ToolCallResult[] = []
@@ -183,24 +225,8 @@ export const usePetStore = create<PetStoreState>((set, get) => ({
           } as any)
         }
 
-        const followUpResponse = await fetch(`${llmEndpoint}/v1/chat/completions`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: llmModel,
-            messages: apiMessages,
-            tools: toolsSchema,
-            stream: false,
-          }),
-        })
-
-        if (!followUpResponse.ok) {
-          throw new Error(`LLM后续请求失败：${followUpResponse.status}`)
-        }
-
-        const followUpData = await followUpResponse.json()
-        const followUpChoice = followUpData.choices?.[0]
-        const finalContent = followUpChoice?.message?.content || '工具执行完成，但未获得回复。'
+        const followUpMsg = await callLLM(apiMessages, true)
+        const finalContent = followUpMsg?.content || '工具执行完成，但未获得回复。'
 
         const assistantMessage: ChatMessage = {
           id: generateId(),
@@ -235,7 +261,7 @@ export const usePetStore = create<PetStoreState>((set, get) => ({
       const assistantMessage: ChatMessage = {
         id: generateId(),
         role: 'assistant',
-        content: `连接失败：${errorMessage}\n\n请检查：\n1. Ollama 是否正在运行\n2. 模型 ${llmModel} 是否已安装\n3. 端点地址 ${llmEndpoint} 是否正确`,
+        content: `连接失败：${errorMessage}\n\n请到「设置 → AI 助手」检查：\n1. AI 是否已启用\n2. 服务商/API Base URL/模型 是否正确\n3. 测试连接是否通过`,
         timestamp: toISODateTimeString(new Date()),
       }
 
@@ -249,10 +275,6 @@ export const usePetStore = create<PetStoreState>((set, get) => ({
 
   updatePosition: (pos) => {
     set({ position: pos })
-  },
-
-  setLLMConfig: (endpoint, model) => {
-    set({ llmEndpoint: endpoint, llmModel: model })
   },
 
   reactToEvent: (event) => {

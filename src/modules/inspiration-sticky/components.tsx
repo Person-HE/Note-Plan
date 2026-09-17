@@ -670,11 +670,15 @@ function CategoryManager() {
 
 function InspirationDetailModal({ item, onClose }: { item: InspirationStickyNote; onClose: () => void }) {
   const store = useInspirationStickyStore()
+  const categories = useInspirationStickyStore(s => s.categories)
   const sourceConfig = SOURCE_CONFIG[item.source]
   const [isEditing, setIsEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(item.title)
   const [editContent, setEditContent] = useState(item.content)
   const [editTags, setEditTags] = useState(item.tags.join(', '))
+  const [editCategoryId, setEditCategoryId] = useState<string | null>(item.categoryId)
+
+  const currentCategory = categories.find(c => c.id === item.categoryId)
 
   const handleSave = async () => {
     const tags = editTags.split(',').map(t => t.trim()).filter(Boolean)
@@ -682,6 +686,7 @@ function InspirationDetailModal({ item, onClose }: { item: InspirationStickyNote
       title: editTitle.trim() || '未命名灵感',
       content: editContent.trim(),
       tags,
+      categoryId: editCategoryId,
     })
     setIsEditing(false)
   }
@@ -760,6 +765,22 @@ function InspirationDetailModal({ item, onClose }: { item: InspirationStickyNote
               </div>
               <div>
                 <label className="block text-sm font-medium font-hand mb-1" style={{ color: 'var(--ink-gray)' }}>
+                  分类
+                </label>
+                <select
+                  value={editCategoryId || ''}
+                  onChange={e => setEditCategoryId(e.target.value || null)}
+                  className="input-hand w-full font-hand"
+                  style={{ color: 'var(--ink-black)' }}
+                >
+                  <option value="">无分类</option>
+                  {categories.map(c => (
+                    <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium font-hand mb-1" style={{ color: 'var(--ink-gray)' }}>
                   标签
                 </label>
                 <input
@@ -817,6 +838,18 @@ function InspirationDetailModal({ item, onClose }: { item: InspirationStickyNote
                 </div>
               )}
 
+              {currentCategory && (
+                <div className="flex items-center gap-1">
+                  <span
+                    className="tag-hand text-xs"
+                    style={{ color: 'var(--ink-gray)', background: currentCategory.color + '20', borderColor: currentCategory.color }}
+                  >
+                    <Icon name={currentCategory.icon} size={10} className="inline mr-0.5" />
+                    {currentCategory.name}
+                  </span>
+                </div>
+              )}
+
               {item.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1">
                   {item.tags.map((tag, i) => (
@@ -851,6 +884,7 @@ function InspirationDetailModal({ item, onClose }: { item: InspirationStickyNote
                   setEditTitle(item.title)
                   setEditContent(item.content)
                   setEditTags(item.tags.join(', '))
+                  setEditCategoryId(item.categoryId)
                 }}
                 className="btn-hand px-4 py-2 font-hand text-sm"
                 style={{ color: 'var(--ink-gray)' }}

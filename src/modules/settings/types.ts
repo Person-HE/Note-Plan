@@ -59,7 +59,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   bufferTimePercent: 20,
   forgivenessCount: 3,
   notificationPermission: 'default',
-  closeToTray: true,
+  closeToTray: false,
   floatingWindowEnabled: false,
   dataStoragePath: '',
   fontSize: 'medium',

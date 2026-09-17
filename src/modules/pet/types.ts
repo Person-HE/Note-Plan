@@ -29,6 +29,4 @@ export interface PetState {
   isChatOpen: boolean
   messages: ChatMessage[]
   isThinking: boolean
-  llmEndpoint: string
-  llmModel: string
 }

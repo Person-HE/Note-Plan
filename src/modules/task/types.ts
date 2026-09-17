@@ -7,6 +7,8 @@ export interface Task {
   progress: number
   parentId: string | null
   groupId: string | null
+  startDate: string | null
+  startTime: string | null
   dueDate: string | null
   dueTime: string | null
   reminderIds: string[]
@@ -70,6 +72,8 @@ export const DEFAULT_TASK: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'order'
   progress: 0,
   parentId: null,
   groupId: null,
+  startDate: null,
+  startTime: null,
   dueDate: null,
   dueTime: null,
   reminderIds: [],

@@ -92,8 +92,7 @@
       "target": [
         "nsis"
       ],
-      "icon": "electron/assets/appIcon.ico",
-      "signAndEditExecutable": false
+      "icon": "electron/assets/appIcon.ico"
     },
     "nsis": {
       "oneClick": false,

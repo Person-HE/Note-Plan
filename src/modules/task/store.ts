@@ -93,6 +93,8 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       progress: input.progress ?? 0,
       parentId: input.parentId ?? null,
       groupId: input.groupId ?? null,
+      startDate: input.startDate ?? null,
+      startTime: input.startTime ?? null,
       dueDate: input.dueDate ?? null,
       dueTime: input.dueTime ?? null,
       reminderIds: input.reminderIds ?? [],

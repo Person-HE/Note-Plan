@@ -1,193 +1,120 @@
 # Note-Plan
 
-多功能笔记计划应用 - 集成AI助手、任务管理、知识管理等功能
+> 本地优先的笔记 / 待办 / 灵感桌面应用：Web + Electron + Capacitor 多端同一套代码。
 
-## 项目简介
+数据默认存在浏览器 **IndexedDB（Dexie）**，不依赖账号与云后端；可选 Electron 打包为 Windows 桌面应用。
 
-Note-Plan 是一款现代化的多功能笔记与计划管理应用，采用 React + TypeScript 技术栈，支持多平台运行（Web、Desktop、Android、iOS）。
+**在线演示**：Cloudflare Pages（构建产物为静态 SPA）
 
-### 核心特性
+---
 
-- **AI智能助手** - 集成AI能力，提供智能辅助
-- **富文本编辑** - 基于Tiptap的专业编辑器，支持表格、任务列表、高亮等多种格式
-- **任务管理** - 完善的待办事项管理功能
-- **知识管理** - 知识库功能，高效组织和管理知识
-- **灵感便签** - 快速记录灵感和想法
-- **数据统计** - 详细的使用统计和分析
-- **多端同步** - 数据跨设备同步
-- **安全防护** - 敏感信息加密保护
-- **虚拟宠物** - 内置养成小游戏
+## 功能
 
-### 技术栈
+| 模块 | 能力 |
+|------|------|
+| 笔记 | TipTap 富文本、表格、任务列表、高亮、链接、图片 |
+| 任务 | 待办清单、优先级、截止提醒 |
+| 统计 | 使用与完成度概览 |
+| 灵感便签 | 快速捕捉想法 |
+| 桌宠 | 轻量陪伴交互 |
+| 通知 | 本地提醒 |
+| 设置 | 主题 / 偏好 |
+| AI | 可配置服务（需自备 API Key） |
+| 同步 | 本地数据导出/导入能力 |
 
-- **前端框架**: React 18 + TypeScript
-- **构建工具**: Vite 5
-- **状态管理**: Zustand
-- **数据库**: Dexie (IndexedDB)
-- **富文本编辑器**: Tiptap
-- **移动端封装**: Capacitor
-- **桌面端**: Electron
-- **样式**: Tailwind CSS
-- **图标**: Lucide React
+## 技术栈
 
-## 项目结构
-
-```
-Note-Plan/
-├── src/                    # 源代码
-│   ├── core/               # 核心模块
-│   │   ├── database.ts     # 数据库管理
-│   │   ├── event-bus.ts    # 事件总线
-│   │   ├── storage.ts      # 存储管理
-│   │   └── module-registry.ts  # 模块注册
-│   ├── modules/            # 功能模块
-│   │   ├── ai/             # AI助手
-│   │   ├── attachment/     # 附件管理
-│   │   ├── collaboration/  # 协作功能
-│   │   ├── inspiration-sticky/  # 灵感便签
-│   │   ├── note/           # 笔记管理
-│   │   ├── notification/   # 通知系统
-│   │   ├── pet/            # 虚拟宠物
-│   │   ├── security/       # 安全加密
-│   │   ├── settings/       # 设置
-│   │   ├── statistics/     # 数据统计
-│   │   ├── sync/           # 数据同步
-│   │   ├── task/           # 任务管理
-│   │   └── view/           # 视图管理
-│   ├── shared/             # 共享组件和工具
-│   │   ├── hooks/          # 自定义Hooks
-│   │   ├── Icons.tsx       # 图标组件
-│   │   └── utils.ts        # 工具函数
-│   ├── App.tsx             # 主应用组件
-│   └── main.tsx            # 入口文件
-├── electron/               # Electron桌面端配置
-├── android/                # Android原生配置
-├── ios/                    # iOS原生配置
-├── resources/              # 资源文件（视频、截图等）
-├── package.json            # 项目配置
-└── vite.config.ts          # Vite配置
-```
+- React 18 + TypeScript + Vite 5 + Tailwind
+- 状态：Zustand；持久化：Dexie / IndexedDB
+- PWA：`vite-plugin-pwa`（可安装到桌面）
+- 多端：Capacitor（Android / iOS / Electron）
+- 桌面：`electron-builder`（NSIS）
 
 ## 快速开始
 
-### 环境要求
-
-- Node.js >= 18.0.0
-- npm >= 9.0.0
-
-### 安装依赖
-
 ```bash
-npm install
-```
-
-### 开发模式
-
-启动Web开发服务器：
-
-```bash
-npm run dev
-```
-
-### 构建
-
-构建Web版本：
-
-```bash
-npm run build
-```
-
-预览构建结果：
-
-```bash
+# Node 18+
+npm ci
+npm run dev          # 开发服务器
+npm run typecheck    # tsc --noEmit
+npm run build        # tsc -b && vite build → dist/
 npm run preview
-```
 
-### 移动端构建
-
-同步Capacitor配置并打开Android Studio：
-
-```bash
-npm run cap:open:android
-```
-
-同步Capacitor配置并打开Xcode：
-
-```bash
-npm run cap:open:ios
-```
-
-### 桌面端构建
-
-构建Electron桌面应用（Windows）：
-
-```bash
+# Electron
+npm run electron:dev
 npm run electron:build:win
+
+# Capacitor
+npm run build:web
+npx cap sync android   # 需本地 Android SDK
 ```
 
-构建Electron桌面应用（macOS）：
+## 目录
 
-```bash
-npm run electron:build:mac
+```
+src/
+├── core/           # database (Dexie) / storage / platform
+├── modules/
+│   ├── note/       # 富文本笔记
+│   ├── task/       # 待办
+│   ├── statistics/ # 统计
+│   ├── inspiration-sticky/
+│   ├── pet/        # 桌宠
+│   ├── notification/
+│   ├── ai/
+│   ├── settings/
+│   ├── sync/
+│   └── view/
+├── shared/
+└── App.tsx
+electron/           # 主进程 / preload / 图标
+scripts/            # 图标生成、截图
 ```
 
-构建Electron桌面应用（Linux）：
+## 量化数据（可复现）
+
+采集环境：**Windows 11 · Node.js v24.12.0 · npm 11.6.2**  
+采集日期：**2026-09-17**  
+复现命令：
 
 ```bash
-npm run electron:build:linux
-```
-
-## 类型检查
-
-```bash
+npm ci
 npm run typecheck
+npm run build
+Get-ChildItem dist -Recurse -File | Measure-Object Length -Sum
 ```
 
-## 代码规范
+| 指标 | 数值 |
+|------|------|
+| TypeScript typecheck | **0 error** |
+| `vite build`（含 tsc -b）总耗时 | **48.6 s**（vite 本体 18.2 s） |
+| 转换模块数 | 2472 |
+| `dist/` 文件数 | 34 |
+| `dist/` 总体积 | **3.18 MB** |
+| 最大 JS | TipTap vendor **515.2 KB**（gzip 164.0 KB） |
+| 主业务 JS | `index` **291.2 KB**（gzip 84.9 KB） |
+| PWA precache | 36 条目 · 约 3.15 MiB |
 
-本项目使用以下工具和配置：
+## 部署到 Cloudflare Pages
 
-- **TypeScript** - 类型检查
-- **Vite** - 构建工具
-- **Tailwind CSS** - 原子化CSS框架
-- **PostCSS** - CSS后处理器
+```bash
+npx wrangler login
+npm run build
+npx wrangler pages deploy dist --project-name=note-plan --branch=main
+```
 
-## 发布说明
+| 项 | 值 |
+|----|----|
+| Build command | `npm run build` |
+| Output directory | `dist` |
+| SPA fallback | `/* /index.html 200` |
 
-### Windows安装包
+## 数据与隐私
 
-- 位置：`release/Note-Plan Setup 1.0.0.exe`
-- 格式：NSIS安装包
-- 支持：Windows 10/11
+- 默认**纯本地**：笔记与任务写入 IndexedDB，不上传服务器。
+- Electron 用户数据目录（Windows 下常见 `Data/`）**不进版本库**。
+- 导出/备份请使用应用内功能或手动备份浏览器存储。
 
-### Android安装包
+## License
 
-- 位置：`release/android/Note-Plan-1.0.0.apk`
-- 格式：APK
-- 支持：Android 8.0+
-
-## 资源文件
-
-### 演示视频
-
-- `resources/便签灵感功能.mp4` - 灵感便签功能演示
-- `resources/待办功能.mp4` - 任务管理功能演示
-- `resources/数据统计功能.mp4` - 数据统计功能演示
-- `resources/知识库.mp4` - 知识库功能演示
-
-### 应用截图
-
-截图文件位于 `resources/` 目录下，展示各个功能界面的实际效果。
-
-## 架构文档
-
-- `项目实现架构.txt` - 项目整体架构说明
-- `分析.txt` - 技术分析文档
-
-## 许可证
-
-MIT License
-
-## 联系方式
-- 邮箱: qaz5744422969@qq.com
-- wx: 19510334042
+见仓库 `LICENSE`。

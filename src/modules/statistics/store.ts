@@ -15,23 +15,29 @@ import type {
 } from './types'
 
 function computeStats(tasks: TaskRecord[]): TaskStats {
-  const totalTasks = tasks.length
-  const completedTasks = tasks.filter(t => t.status === 'completed').length
-  const inProgressTasks = tasks.filter(t => t.status === 'in_progress').length
-  const pendingTasks = tasks.filter(t => t.status === 'pending').length
+  // 统计基数：排除已取消的任务（已取消任务不应影响完成率、预估时长等指标）
+  const effectiveTasks = tasks.filter(t => t.status !== 'cancelled')
+  const totalTasks = effectiveTasks.length
+  const completedTasks = effectiveTasks.filter(t => t.status === 'completed').length
+  const inProgressTasks = effectiveTasks.filter(t => t.status === 'in_progress').length
+  const pendingTasks = effectiveTasks.filter(t => t.status === 'pending').length
   const cancelledTasks = tasks.filter(t => t.status === 'cancelled').length
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
 
   const today = toISODateString(new Date())
-  const overdueTasks = tasks.filter(t =>
-    t.status !== 'completed' && t.status !== 'cancelled' &&
+  const overdueTasks = effectiveTasks.filter(t =>
+    t.status !== 'completed' &&
     t.dueDate && t.dueDate.trim() !== '' && t.dueDate < today
   ).length
 
-  const totalEstimatedMinutes = tasks.reduce((sum, t) => sum + t.estimatedMinutes, 0)
-  const totalActualMinutes = tasks.reduce((sum, t) => sum + t.actualMinutes, 0)
+  // 预估时长：只统计有效任务（排除已取消）
+  const totalEstimatedMinutes = effectiveTasks.reduce((sum, t) => sum + (t.estimatedMinutes || 0), 0)
+  // 实际专注时长：只统计已完成的任务（未完成的 actualMinutes 通常为 0 或无意义）
+  const totalActualMinutes = completedTasks > 0
+    ? effectiveTasks.filter(t => t.status === 'completed').reduce((sum, t) => sum + (t.actualMinutes || 0), 0)
+    : 0
 
-  const completedWithTime = tasks.filter(t => t.status === 'completed' && t.actualMinutes > 0)
+  const completedWithTime = effectiveTasks.filter(t => t.status === 'completed' && t.actualMinutes > 0)
   const averageCompletionMinutes = completedWithTime.length > 0
     ? Math.round(completedWithTime.reduce((sum, t) => sum + t.actualMinutes, 0) / completedWithTime.length)
     : 0

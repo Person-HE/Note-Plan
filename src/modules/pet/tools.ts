@@ -1778,28 +1778,6 @@ const viewSelectDateTool: AITool = {
   },
 }
 
-const petSetLLMConfigTool: AITool = {
-  name: 'pet.set_llm_config',
-  description: '设置桌宠的LLM配置',
-  parameters: {
-    endpoint: { type: 'string', description: 'LLM端点地址，如 http://localhost:11434' },
-    model: { type: 'string', description: '模型名称，如 qwen2.5:7b' },
-  },
-  execute: async (args) => {
-    try {
-      const { usePetStore } = await import('./store')
-      const store = usePetStore.getState()
-      store.setLLMConfig(
-        args.endpoint ?? store.llmEndpoint,
-        args.model ?? store.llmModel,
-      )
-      return `已设置LLM：${args.endpoint ?? store.llmEndpoint} / ${args.model ?? store.llmModel}`
-    } catch (err) {
-      return `设置LLM配置失败：${err instanceof Error ? err.message : String(err)}`
-    }
-  },
-}
-
 const helpTool: AITool = {
   name: 'help',
   description: '获取帮助信息，列出所有可用的命令和功能',
@@ -1917,7 +1895,7 @@ const helpTool: AITool = {
         'view.select_date - 选择日期',
       ],
       pet: [
-        'pet.set_llm_config - 设置LLM配置',
+        '小笔直接使用「设置 → AI 助手」中配置的模型，无需单独设置',
       ],
     }
     if (args.category && categories[args.category]) {
@@ -2013,7 +1991,6 @@ export function getAllTools(): AITool[] {
     viewSwitchTabTool,
     viewToggleSidebarTool,
     viewSelectDateTool,
-    petSetLLMConfigTool,
     helpTool,
   ]
 }

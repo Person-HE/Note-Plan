@@ -344,7 +344,8 @@ export function DesktopPet() {
               left: '50%',
               transform: 'translateX(-50%)',
               marginBottom: 8,
-              maxWidth: 200,
+              width: 'max-content',
+              maxWidth: 220,
               padding: '8px 14px',
               fontSize: 14,
               fontFamily: 'var(--font-hand)',
@@ -354,9 +355,10 @@ export function DesktopPet() {
               borderRadius: 'var(--border-radius-md)',
               boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
               animation: 'speech-fade 0.3s ease-out',
-              whiteSpace: 'normal',
+              whiteSpace: 'pre-wrap',
               wordBreak: 'break-word',
               textAlign: 'center',
+              lineHeight: 1.4,
             }}
           >
             {speechText}
@@ -391,7 +393,6 @@ function ChatPanel() {
   const mood = usePetStore(s => s.mood)
 
   const [input, setInput] = useState('')
-  const [showSettings, setShowSettings] = useState(false)
   const [expandedTools, setExpandedTools] = useState<Set<string>>(new Set())
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -454,39 +455,21 @@ function ChatPanel() {
             小笔
           </span>
         </div>
-        <div style={{ display: 'flex', gap: 4 }}>
-          <button
-            onClick={() => setShowSettings(!showSettings)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              color: 'white',
-              padding: 4,
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <Icon name="settings" size={16} />
-          </button>
-          <button
-            onClick={() => store.toggleChat()}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              color: 'white',
-              padding: 4,
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <Icon name="close" size={16} />
-          </button>
-        </div>
+        <button
+          onClick={() => store.toggleChat()}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            color: 'white',
+            padding: 4,
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
+          <Icon name="close" size={16} />
+        </button>
       </div>
-
-      {showSettings && <PetSettings onClose={() => setShowSettings(false)} />}
 
       <div
         style={{
@@ -663,141 +646,6 @@ function MessageBubble({
           })}
         </div>
       )}
-    </div>
-  )
-}
-
-export function PetSettings({ onClose }: { onClose: () => void }) {
-  const store = usePetStore()
-  const llmEndpoint = usePetStore(s => s.llmEndpoint)
-  const llmModel = usePetStore(s => s.llmModel)
-
-  const [endpoint, setEndpoint] = useState(llmEndpoint)
-  const [model, setModel] = useState(llmModel)
-  const [testing, setTesting] = useState(false)
-  const [testResult, setTestResult] = useState<string | null>(null)
-
-  const handleTest = async () => {
-    setTesting(true)
-    setTestResult(null)
-    try {
-      const res = await fetch(`${endpoint}/v1/models`, { signal: AbortSignal.timeout(5000) })
-      if (res.ok) {
-        const data = await res.json()
-        const models = data.data?.map((m: any) => m.id).join(', ') ?? '未知'
-        setTestResult(`✓ 连接成功！可用模型：${models.slice(0, 100)}`)
-      } else {
-        setTestResult(`✗ 连接失败：${res.status}`)
-      }
-    } catch (err) {
-      setTestResult(`✗ 无法连接：${err instanceof Error ? err.message : String(err)}`)
-    } finally {
-      setTesting(false)
-    }
-  }
-
-  const handleSave = () => {
-    store.setLLMConfig(endpoint, model)
-    onClose()
-  }
-
-  return (
-    <div
-      style={{
-        padding: 12,
-        borderBottom: '2px solid var(--ink-black)',
-        background: 'var(--paper-texture)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 8,
-      }}
-    >
-      <div style={{ fontFamily: 'var(--font-hand)', fontSize: 14, fontWeight: 700, color: 'var(--ink-black)' }}>
-        <Icon name="settings" size={14} /> LLM 设置
-      </div>
-
-      <div>
-        <label
-          style={{
-            display: 'block',
-            fontFamily: 'var(--font-hand)',
-            fontSize: 12,
-            color: 'var(--ink-gray)',
-            marginBottom: 2,
-          }}
-        >
-          端点地址
-        </label>
-        <input
-          value={endpoint}
-          onChange={(e) => setEndpoint(e.target.value)}
-          placeholder="http://localhost:11434"
-          className="input-hand font-hand"
-          style={{ fontSize: 13, padding: '4px 8px', minHeight: 28 }}
-        />
-      </div>
-
-      <div>
-        <label
-          style={{
-            display: 'block',
-            fontFamily: 'var(--font-hand)',
-            fontSize: 12,
-            color: 'var(--ink-gray)',
-            marginBottom: 2,
-          }}
-        >
-          模型名称
-        </label>
-        <input
-          value={model}
-          onChange={(e) => setModel(e.target.value)}
-          placeholder="qwen2.5:7b"
-          className="input-hand font-hand"
-          style={{ fontSize: 13, padding: '4px 8px', minHeight: 28 }}
-        />
-      </div>
-
-      {testResult && (
-        <div
-          style={{
-            fontFamily: 'var(--font-hand)',
-            fontSize: 12,
-            color: testResult.startsWith('✓') ? 'var(--accent-green)' : 'var(--accent-red)',
-            padding: '4px 8px',
-            background: 'var(--paper-bg)',
-            borderRadius: 'var(--border-radius-sm)',
-            border: '1px solid var(--ink-light)',
-          }}
-        >
-          {testResult}
-        </div>
-      )}
-
-      <div style={{ display: 'flex', gap: 8 }}>
-        <button
-          onClick={handleTest}
-          disabled={testing}
-          className="btn-hand font-hand"
-          style={{ fontSize: 13, padding: '4px 12px', minHeight: 28 }}
-        >
-          {testing ? '测试中...' : '测试连接'}
-        </button>
-        <button
-          onClick={handleSave}
-          className="btn-hand btn-hand-primary font-hand"
-          style={{ fontSize: 13, padding: '4px 12px', minHeight: 28 }}
-        >
-          保存
-        </button>
-        <button
-          onClick={onClose}
-          className="btn-hand font-hand"
-          style={{ fontSize: 13, padding: '4px 12px', minHeight: 28 }}
-        >
-          取消
-        </button>
-      </div>
     </div>
   )
 }

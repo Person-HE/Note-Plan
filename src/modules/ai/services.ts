@@ -1,4 +1,4 @@
-import { addDays, toISODateString } from '@/shared'
+import { addDays, toISODateString, isElectron } from '@/shared'
 import { startOfWeek } from '@/shared/date-utils'
 import type { NLPResult, TaskDecomposition, AIConfig, AIChatMessage } from './types'
 
@@ -39,6 +39,15 @@ export function saveAIConfig(config: AIConfig): void {
   localStorage.setItem(AI_CONFIG_KEY, JSON.stringify(config))
 }
 
+// 智能拼接 chat/completions URL，避免 /v1/v1/chat/completions 重复
+function buildChatCompletionsUrl(apiBaseUrl: string): string {
+  const trimmed = (apiBaseUrl || '').trim().replace(/\/+$/, '')
+  if (/\/v1$/i.test(trimmed)) {
+    return `${trimmed}/chat/completions`
+  }
+  return `${trimmed}/v1/chat/completions`
+}
+
 export async function callAI(prompt: string, systemPrompt?: string): Promise<string> {
   const config = getAIConfig()
   if (!config.enabled || config.provider === 'none') {
@@ -51,8 +60,20 @@ export async function callAI(prompt: string, systemPrompt?: string): Promise<str
   }
   messages.push({ role: 'user', content: prompt })
 
-  const baseUrl = config.apiBaseUrl.replace(/\/+$/, '')
-  const url = `${baseUrl}/v1/chat/completions`
+  // Electron 环境：通过主进程代理，规避浏览器 CORS 限制
+  if (isElectron() && window.electronAPI?.callAI) {
+    const result = await window.electronAPI.callAI(
+      { apiBaseUrl: config.apiBaseUrl, apiKey: config.apiKey, model: config.model },
+      { messages, stream: false }
+    )
+    if (!result.success) {
+      throw new Error(result.error || 'AI 请求失败')
+    }
+    return result.data!.content
+  }
+
+  // Web 端回退：直接 fetch（受同源策略限制，仅适用于支持 CORS 的服务）
+  const url = buildChatCompletionsUrl(config.apiBaseUrl)
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -89,8 +110,22 @@ export async function testAIConnection(config: AIConfig): Promise<{ ok: boolean;
     return { ok: false, message: '请先选择 AI 服务商' }
   }
 
-  const baseUrl = config.apiBaseUrl.replace(/\/+$/, '')
-  const url = `${baseUrl}/v1/chat/completions`
+  // Electron 环境：通过主进程代理测试
+  if (isElectron() && window.electronAPI?.testAI) {
+    try {
+      const result = await window.electronAPI.testAI({
+        apiBaseUrl: config.apiBaseUrl,
+        apiKey: config.apiKey,
+        model: config.model,
+      })
+      return { ok: result.success, message: result.message }
+    } catch (err) {
+      return { ok: false, message: `连接失败: ${(err as Error).message}` }
+    }
+  }
+
+  // Web 端回退
+  const url = buildChatCompletionsUrl(config.apiBaseUrl)
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
