@@ -1,6 +1,5 @@
 # Dependencies
 node_modules/
-/package-lock.json
 
 # Build outputs
 dist/
@@ -77,3 +76,6 @@ xiaohongshu/
 *.html
 !index.html
 
+
+# extracted demo recordings (published as GitHub Release assets)
+resources-demo/

@@ -1,120 +1,120 @@
 # Note-Plan
 
-> 本地优先的笔记 / 待办 / 灵感桌面应用：Web + Electron + Capacitor 多端同一套代码。
+**A local-first notes, tasks and inspiration app. One codebase, four targets: web, desktop, Android, iOS.**
 
-数据默认存在浏览器 **IndexedDB（Dexie）**，不依赖账号与云后端；可选 Electron 打包为 Windows 桌面应用。
+[![Live demo](https://img.shields.io/badge/Live%20demo-note--plan--bwm.pages.dev-2f7cf6?style=flat-square)](https://note-plan-bwm.pages.dev)
+![Offline](https://img.shields.io/badge/PWA-offline-brightgreen?style=flat-square)
+![Storage](https://img.shields.io/badge/storage-IndexedDB-informational?style=flat-square)
+![Sync](https://img.shields.io/badge/sync-WebDAV_(your_server)-yellowgreen?style=flat-square)
 
-**在线演示**：Cloudflare Pages（构建产物为静态 SPA）
+Tasks, notes and inspiration cards with a TipTap rich-text editor, tagging, statistics and a companion pet. Your entries live in IndexedDB on your device. Sync is WebDAV against a server you own. The AI assistant talks to an endpoint you configure. There is no account and no backend of ours.
 
----
+**→ [note-plan-bwm.pages.dev](https://note-plan-bwm.pages.dev)**
 
-## 功能
+## See it
 
-| 模块 | 能力 |
-|------|------|
-| 笔记 | TipTap 富文本、表格、任务列表、高亮、链接、图片 |
-| 任务 | 待办清单、优先级、截止提醒 |
-| 统计 | 使用与完成度概览 |
-| 灵感便签 | 快速捕捉想法 |
-| 桌宠 | 轻量陪伴交互 |
-| 通知 | 本地提醒 |
-| 设置 | 主题 / 偏好 |
-| AI | 可配置服务（需自备 API Key） |
-| 同步 | 本地数据导出/导入能力 |
+Recordings are attached to [release `demos-2026-09`](https://github.com/Person-HE/Note-Plan/releases/tag/demos-2026-09) rather than committed to the repo, so cloning stays cheap:
 
-## 技术栈
+| Walkthrough | Length |
+| --- | ---: |
+| [Full product tour](https://github.com/Person-HE/Note-Plan/releases/download/demos-2026-09/walkthrough-full.mp4) | 39.9 MB |
+| [Tasks](https://github.com/Person-HE/Note-Plan/releases/download/demos-2026-09/tasks.mp4) | 37.8 MB |
+| [Notes & inspiration](https://github.com/Person-HE/Note-Plan/releases/download/demos-2026-09/notes-inspiration.mp4) | 30.1 MB |
+| [Statistics](https://github.com/Person-HE/Note-Plan/releases/download/demos-2026-09/statistics.mp4) | 12.3 MB |
+| [Knowledge base](https://github.com/Person-HE/Note-Plan/releases/download/demos-2026-09/knowledge-base.mp4) | 8.1 MB |
 
-- React 18 + TypeScript + Vite 5 + Tailwind
-- 状态：Zustand；持久化：Dexie / IndexedDB
-- PWA：`vite-plugin-pwa`（可安装到桌面）
-- 多端：Capacitor（Android / iOS / Electron）
-- 桌面：`electron-builder`（NSIS）
+## What it does
 
-## 快速开始
+- **Today / tasks** — due-oriented task list with importance buckets (today · important · all) and completion state.
+- **Notes** — TipTap rich text with images, lists and headings, plus inspiration and knowledge collections.
+- **Statistics** — local aggregation of what you wrote and finished, computed on device.
+- **Pet** — an ambient companion that reacts to your activity.
+- **AI assistant** — optional; point it at any OpenAI-compatible base URL and key in settings.
+- **WebDAV sync** — bring your own server (Nextcloud, Jianguoyun, any WebDAV endpoint) and keep devices in step without our infrastructure.
+- **Installable** — service worker + manifest; the web build runs offline after first load.
+- **Same code everywhere** — Electron for desktop, Capacitor for Android and iOS.
+
+## Measured, not claimed
+
+`npm run metrics` runs a clean build, walks the output, and records the machine the
+numbers came from into `docs/metrics.json`.
+
+| Metric | Value |
+| --- | --- |
+| Clean build (`tsc -b && vite build`) | 13.4 s |
+| Build output | 35 files · 3.18 MB raw · 2.18 MB gzip |
+| Largest chunk | `vendor-tiptap` — 504 KB raw |
+| Source | 93 files · 20,177 lines (17,700 code) |
+| Server required | none |
+| AI/WebDAV | optional, user-configured |
+
+Live behaviour, cold cache, real browser, deployed site:
+
+| Metric | Value |
+| --- | --- |
+| TTFB | 1.32 s |
+| `load` event | 2.79 s |
+| First-page transfer | ~387 KB |
+
+## Running it
 
 ```bash
-# Node 18+
-npm ci
-npm run dev          # 开发服务器
-npm run typecheck    # tsc --noEmit
-npm run build        # tsc -b && vite build → dist/
-npm run preview
-
-# Electron
-npm run electron:dev
-npm run electron:build:win
-
-# Capacitor
-npm run build:web
-npx cap sync android   # 需本地 Android SDK
+npm install
+npm run dev           # http://localhost:5173
+npm run build         # web bundle → dist/
+npm run typecheck
+npm run lint          # --max-warnings 0
+npm run metrics       # docs/metrics.json + docs/metrics.md
 ```
 
-## 目录
+Desktop and mobile:
+
+```bash
+npm run electron:dev          # build + Electron shell
+npm run electron:build:win    # Windows installer
+npm run build:android         # vite build → cap sync → Android Studio
+npm run build:ios             # vite build → cap sync → Xcode
+```
+
+## Deploying
+
+```bash
+npx wrangler pages deploy dist --project-name note-plan
+```
+
+`vite.config.ts` sets `base: './'` so the bundle is subpath-safe, but the PWA
+manifest and service worker use `start_url: '/'` and `scope: '/'`. Install prompts
+therefore only behave on a domain root, such as a Pages deployment — not under a
+subdirectory.
+
+## Layout
 
 ```
 src/
-├── core/           # database (Dexie) / storage / platform
-├── modules/
-│   ├── note/       # 富文本笔记
-│   ├── task/       # 待办
-│   ├── statistics/ # 统计
-│   ├── inspiration-sticky/
-│   ├── pet/        # 桌宠
-│   ├── notification/
-│   ├── ai/
-│   ├── settings/
-│   ├── sync/
-│   └── view/
-├── shared/
-└── App.tsx
-electron/           # 主进程 / preload / 图标
-scripts/            # 图标生成、截图
+  modules/       notes · tasks · ai · sync · stats (each: components + store + services)
+  shared/        platform detection, IndexedDB/Dexie layer, utilities
+electron/        desktop main process
+public/          icons, manifest, _redirects
+scripts/         icon generation, metrics collector
 ```
 
-## 量化数据（可复现）
+## Honest gaps
 
-采集环境：**Windows 11 · Node.js v24.12.0 · npm 11.6.2**  
-采集日期：**2026-09-17**  
-复现命令：
+- **No automated tests.** `typecheck` and a zero-warning `lint` gate are the only mechanical safety net.
+- The editor chunk dominates the bundle: `vendor-tiptap` alone is 504 KB of the 3.18 MB output, and there is no route-level splitting behind it.
+- Roughly 2.3 MB of the deployed output is PNG/ICO icon variants.
+- UI is Chinese-first; there is no i18n layer.
+- The Git history carries large binaries and the object store is ~123 MB, so cloning is slower than the source warrants.
 
-```bash
-npm ci
-npm run typecheck
-npm run build
-Get-ChildItem dist -Recurse -File | Measure-Object Length -Sum
-```
+## 中文说明
 
-| 指标 | 数值 |
-|------|------|
-| TypeScript typecheck | **0 error** |
-| `vite build`（含 tsc -b）总耗时 | **48.6 s**（vite 本体 18.2 s） |
-| 转换模块数 | 2472 |
-| `dist/` 文件数 | 34 |
-| `dist/` 总体积 | **3.18 MB** |
-| 最大 JS | TipTap vendor **515.2 KB**（gzip 164.0 KB） |
-| 主业务 JS | `index` **291.2 KB**（gzip 84.9 KB） |
-| PWA precache | 36 条目 · 约 3.15 MiB |
+Note-Plan 是一款**本地优先**的笔记 / 待办 / 灵感应用：TipTap 富文本、任务与优先级、统计、桌面宠物，数据存放于设备 IndexedDB。同步使用你自己的 WebDAV 服务，AI 助手使用你自己配置的兼容端点——本项目不存在任何官方后端或账号体系。
 
-## 部署到 Cloudflare Pages
-
-```bash
-npx wrangler login
-npm run build
-npx wrangler pages deploy dist --project-name=note-plan --branch=main
-```
-
-| 项 | 值 |
-|----|----|
-| Build command | `npm run build` |
-| Output directory | `dist` |
-| SPA fallback | `/* /index.html 200` |
-
-## 数据与隐私
-
-- 默认**纯本地**：笔记与任务写入 IndexedDB，不上传服务器。
-- Electron 用户数据目录（Windows 下常见 `Data/`）**不进版本库**。
-- 导出/备份请使用应用内功能或手动备份浏览器存储。
+- 在线使用：<https://note-plan-bwm.pages.dev>（PWA，可安装、首访后可离线）
+- 一套代码四端运行：Web / Electron 桌面 / Capacitor Android / iOS
+- 全部指标可复现：`npm run metrics` → `docs/metrics.json`，含采集环境（Windows 11、Node 24.12.0、Ryzen 7 7735H）
+- 已知不足：无自动化测试；编辑器分包体积大；界面仅中文
 
 ## License
 
-见仓库 `LICENSE`。
+Apache License 2.0 — see `LICENSE`.

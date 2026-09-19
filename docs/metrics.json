@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-19T11:05:40.548Z",
+  "project": "note-plan",
+  "commands": {
+    "build": "npm run build",
+    "test": null,
+    "metrics": "node scripts/metrics.mjs"
+  },
+  "environment": {
+    "platform": "Windows_NT 10.0.26200 (x64)",
+    "cpus": 16,
+    "cpuModel": "AMD Ryzen 7 7735H with Radeon Graphics",
+    "memoryGB": 15.2,
+    "node": "v24.12.0",
+    "npm": "11.6.2",
+    "timezone": "Asia/Shanghai"
+  },
+  "git": {
+    "commit": "dc963c954e1372f7fd635b96713abbb4ba4ef14b",
+    "shortCommit": "dc963c9",
+    "branch": "main",
+    "dirty": true
+  },
+  "build": {
+    "clean": true,
+    "durationMs": 62544,
+    "durationS": 62.5
+  },
+  "source": {
+    "roots": [
+      "src",
+      "electron"
+    ],
+    "files": 93,
+    "totalLines": 20177,
+    "codeLines": 17700,
+    "commentLines": 791,
+    "blankLines": 1686,
+    "commentRatio": 3.9,
+    "byLanguage": {
+      "TypeScript (React)": {
+        "files": 16,
+        "lines": 9104
+      },
+      "TypeScript": {
+        "files": 56,
+        "lines": 8463
+      },
+      "JavaScript (CJS)": {
+        "files": 2,
+        "lines": 1012
+      },
+      "JavaScript": {
+        "files": 16,
+        "lines": 959
+      },
+      "CSS": {
+        "files": 2,
+        "lines": 600
+      },
+      "HTML": {
+        "files": 1,
+        "lines": 39
+      }
+    }
+  },
+  "bundle": {
+    "root": "dist",
+    "files": 35,
+    "rawBytes": 3330293,
+    "rawMB": 3.18,
+    "gzipBytes": 2287667,
+    "gzipMB": 2.18,
+    "compressionRatio": 68.7,
+    "largestFiles": [
+      {
+        "file": "assets/vendor-tiptap-BUF2htId.js",
+        "rawBytes": 515915,
+        "gzipBytes": 163782
+      },
+      {
+        "file": "icon-512.png",
+        "rawBytes": 461052,
+        "gzipBytes": 457116
+      },
+      {
+        "file": "pwa-512x512.png",
+        "rawBytes": 461052,
+        "gzipBytes": 457116
+      },
+      {
+        "file": "icon-1024.png",
+        "rawBytes": 448664,
+        "gzipBytes": 448611
+      },
+      {
+        "file": "favicon.ico",
+        "rawBytes": 372526,
+        "gzipBytes": 156858
+      }
+    ],
+    "byType": {
+      ".png": {
+        "files": 16,
+        "rawBytes": 1798750,
+        "gzipBytes": 1789422
+      },
+      ".js": {
+        "files": 14,
+        "rawBytes": 1117265,
+        "gzipBytes": 331837
+      },
+      ".ico": {
+        "files": 1,
+        "rawBytes": 372526,
+        "gzipBytes": 156858
+      },
+      ".css": {
+        "files": 1,
+        "rawBytes": 39105,
+        "gzipBytes": 8391
+      },
+      ".html": {
+        "files": 1,
+        "rawBytes": 2157,
+        "gzipBytes": 819
+      },
+      ".webmanifest": {
+        "files": 1,
+        "rawBytes": 468,
+        "gzipBytes": 298
+      },
+      "(none)": {
+        "files": 1,
+        "rawBytes": 22,
+        "gzipBytes": 42
+      }
+    },
+    "counts": {
+      "js": 14,
+      "css": 1,
+      "font": 0,
+      "wasm": 0,
+      "image": 17,
+      "html": 1
+    }
+  },
+  "tests": {
+    "configured": false
+  },
+  "dependencies": {
+    "runtime": 38,
+    "dev": 11,
+    "directTotal": 49
+  }
+}
